@@ -40,3 +40,6 @@ You will need:
 This project is not affiliated with or supported by E3/DC GmbH.
 
 Use at your own risk.
+
+## License
+MIT License © 2026 Johann Legler
