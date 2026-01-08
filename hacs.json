@@ -1,5 +1,7 @@
 {
   "name": "E3/DC Hauskraftwerk",
   "content_in_root": false,
-  "domain": "e3dc"
+  "domain": "e3dc",
+  "country": ["DE", "AT", "CH"],
+  "homeassistant": "2026.1.0"
 }
