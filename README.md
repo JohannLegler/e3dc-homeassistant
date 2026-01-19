@@ -1,9 +1,4 @@
-# e3dc-homeassistant
-Home Assistant Integration for E3/DC Hauskraftwerk using local Modbus/TCP communication.
-
-
-# E3/DC Home Assistant Integration
-
+﻿# E3/DC Home Assistant Integration
 Custom Home Assistant integration for E3/DC Hauskraftwerk systems using local Modbus/TCP.
 
 ## Features
@@ -22,15 +17,27 @@ Custom Home Assistant integration for E3/DC Hauskraftwerk systems using local Mo
 ## Installation
 
 ### Manual
-1. Copy the `e3dc` folder to:
-2. Restart Home Assistant
-3. Add the integration via **Settings → Devices & Services**
+1. Copy `custom_components/e3dc` to your Home Assistant config directory.
+2. Restart Home Assistant.
+3. Add the integration via **Settings > Devices & Services**.
 
 ## Configuration
 The integration is configured via the UI (Config Flow).
 You will need:
 - IP address of the E3/DC system
 - Modbus port (default: 502)
+- Optional: register offset (auto-detected via magic byte)
+
+## Addressing and Magic Byte
+- Simple Mode magic byte is `0xE3DC` at register `40001`.
+- Some clients use different base addresses; the integration probes offsets
+  around `40001` and applies the detected offset to all registers.
+- SunSpec mode is not supported; its magic is `0x53756e53` (`SunS`).
+
+## Troubleshooting
+- If setup fails, verify Modbus/TCP is enabled and reachable on port 502.
+- If values look unreasonable, ensure Simple Mode is enabled and that the
+  register offset was detected correctly.
 
 ## Limitations
 - No write/control functions yet
@@ -42,4 +49,4 @@ This project is not affiliated with or supported by E3/DC GmbH.
 Use at your own risk.
 
 ## License
-MIT License © 2026 Johann Legler
+MIT License - 2026 Johann Legler

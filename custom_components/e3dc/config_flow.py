@@ -1,3 +1,5 @@
+import logging
+
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -13,6 +15,7 @@ from .const import (
 )
 from .modbus import E3DCModbusClient
 
+_LOGGER = logging.getLogger(__name__)
 
 WALLBOX_TYPES = {
     "classic": "Wallbox classic",
@@ -84,20 +87,53 @@ class E3DCConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if not data.get("validate_magicbyte", True):
             return
 
-        client = E3DCModbusClient(
-            host=data["host"],
-            port=data["port"],
-            unit_id=data["unit_id"],
-            register_offset=data["register_offset"],
+        detected = None
+        offsets = (0, -1, -2, 1, 2)
+
+        for offset in offsets:
+            client = E3DCModbusClient(
+                host=data["host"],
+                port=data["port"],
+                unit_id=data["unit_id"],
+                register_offset=offset,
+            )
+            await client.connect()
+            try:
+                regs = await client.read_holding_registers(40001, 1)
+                if regs[0] == 0xE3DC:
+                    detected = ("e3dc", offset, regs)
+                    break
+
+                regs = await client.read_holding_registers(40001, 2)
+                if regs[0] == 0x5375 and regs[1] == 0x6E53:
+                    detected = ("sunspec", offset, regs)
+                    break
+            except Exception as err:
+                _LOGGER.debug(
+                    "Magic check failed (offset %s): %s", offset, err
+                )
+            finally:
+                await client.close()
+
+        if not detected:
+            raise HomeAssistantError(
+                "Magic byte not found; check addressing or mode"
+            )
+
+        mode, offset, regs = detected
+        _LOGGER.debug(
+            "Magic detected mode=%s offset=%s regs=%s",
+            mode,
+            offset,
+            regs,
         )
 
-        await client.connect()
-        try:
-            regs = await client.read_holding_registers(40001, 1)
-            if regs[0] not in (0xE3DC, 0x00DC):
-                raise HomeAssistantError("Not an E3/DC device")
-        finally:
-            await client.close()
+        if mode == "sunspec":
+            raise HomeAssistantError(
+                "SunSpec mode detected; Simple Mode required"
+            )
+
+        data["register_offset"] = offset
 
     @staticmethod
     def async_get_options_flow(config_entry):
