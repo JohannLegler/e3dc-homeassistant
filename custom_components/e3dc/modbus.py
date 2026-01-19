@@ -46,10 +46,15 @@ class E3DCModbusClient:
                     slave=self._unit_id,
                 )
             except TypeError:
-                result = await self._client.read_holding_registers(
-                    **kwargs,
-                    unit=self._unit_id,
-                )
+                try:
+                    result = await self._client.read_holding_registers(
+                        **kwargs,
+                        unit=self._unit_id,
+                    )
+                except TypeError:
+                    result = await self._client.read_holding_registers(
+                        **kwargs
+                    )
 
         if result.isError():
             raise ModbusException(result)
@@ -69,10 +74,15 @@ class E3DCModbusClient:
                     slave=self._unit_id,
                 )
             except TypeError:
-                result = await self._client.write_register(
-                    **kwargs,
-                    unit=self._unit_id,
-                )
+                try:
+                    result = await self._client.write_register(
+                        **kwargs,
+                        unit=self._unit_id,
+                    )
+                except TypeError:
+                    result = await self._client.write_register(
+                        **kwargs
+                    )
 
         if result.isError():
             raise ModbusException(result)
