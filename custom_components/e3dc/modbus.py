@@ -37,7 +37,7 @@ class E3DCModbusClient:
         async with self._lock:
             await self.connect()
             kwargs = {
-                "address": address + self._register_offset,
+                "address": (address - 40001) + self._register_offset,
                 "count": count,
             }
             try:
@@ -65,7 +65,7 @@ class E3DCModbusClient:
         async with self._lock:
             await self.connect()
             kwargs = {
-                "address": address + self._register_offset,
+                "address": (address - 40001) + self._register_offset,
                 "value": value,
             }
             try:
