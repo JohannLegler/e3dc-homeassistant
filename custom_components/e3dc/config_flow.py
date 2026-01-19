@@ -27,6 +27,9 @@ WALLBOX_TYPES = {
 
 class E3DCConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     VERSION = 1
+    _discovered_host = None
+    _discovered_port = None
+    _discovered_name = None
 
     async def async_step_user(self, user_input=None):
         errors = {}
@@ -81,6 +84,68 @@ class E3DCConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="user",
             data_schema=schema,
             errors=errors,
+        )
+
+    async def async_step_zeroconf(self, discovery_info):
+        host = discovery_info.get("host")
+        port = discovery_info.get("port", DEFAULT_PORT)
+        name = discovery_info.get("name") or host
+
+        if not host:
+            return self.async_abort(reason="cannot_connect")
+
+        await self.async_set_unique_id(host)
+        self._abort_if_unique_id_configured()
+
+        self._discovered_host = host
+        self._discovered_port = port
+        self._discovered_name = name
+
+        return await self.async_step_confirm()
+
+    async def async_step_confirm(self, user_input=None):
+        errors = {}
+
+        if user_input is not None:
+            data = {
+                "host": self._discovered_host,
+                "port": self._discovered_port,
+                "unit_id": DEFAULT_UNIT_ID,
+                "register_offset": DEFAULT_REGISTER_OFFSET,
+                "validate_magicbyte": True,
+            }
+            try:
+                await self._validate_input(self.hass, data)
+            except CannotConnect:
+                errors["base"] = "cannot_connect"
+            except Exception:
+                errors["base"] = "unknown"
+            else:
+                return self.async_create_entry(
+                    title=f"E3/DC {self._discovered_name}",
+                    data={
+                        "host": data["host"],
+                        "port": data["port"],
+                        "unit_id": data["unit_id"],
+                        "register_offset": data["register_offset"],
+                    },
+                    options={
+                        "scan_interval": DEFAULT_SCAN_INTERVAL,
+                        "wallboxes": 1,
+                        "wallbox_type": "classic",
+                        "register_offset": data["register_offset"],
+                        "validate_magicbyte": True,
+                    },
+                )
+
+        return self.async_show_form(
+            step_id="confirm",
+            data_schema=vol.Schema({}),
+            errors=errors,
+            description_placeholders={
+                "name": self._discovered_name or "",
+                "host": self._discovered_host or "",
+            },
         )
 
     async def _validate_input(self, hass: HomeAssistant, data):
