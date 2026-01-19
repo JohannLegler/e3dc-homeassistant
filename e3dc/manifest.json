@@ -1,9 +1,0 @@
-{
-  "domain": "e3dc",
-  "name": "E3/DC Hauskraftwerk",
-  "documentation": "https://github.com/JohannLegler/e3dc-homeassistant",
-  "requirements": ["pymodbus>=3.5.0"],
-  "codeowners": ["@JohannLegler"],
-  "config_flow": true,
-  "iot_class": "local_polling"
-}

@@ -6,10 +6,11 @@ from pymodbus.exceptions import ModbusException
 
 
 class E3DCModbusClient:
-    def __init__(self, host, port=502, unit_id=1):
+    def __init__(self, host, port=502, unit_id=1, register_offset=0):
         self._host = host
         self._port = port
         self._unit_id = unit_id
+        self._register_offset = register_offset
 
         self._client = AsyncModbusTcpClient(
             host=self._host,
@@ -34,7 +35,7 @@ class E3DCModbusClient:
         async with self._lock:
             await self.connect()
             result = await self._client.read_holding_registers(
-                address=address - 1,
+                address=address + self._register_offset - 1,
                 count=count,
                 slave=self._unit_id,
             )
@@ -48,7 +49,7 @@ class E3DCModbusClient:
         async with self._lock:
             await self.connect()
             result = await self._client.write_register(
-                address=address - 1,
+                address=address + self._register_offset - 1,
                 value=value,
                 slave=self._unit_id,
             )

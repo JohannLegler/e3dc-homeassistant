@@ -3,6 +3,7 @@ DOMAIN = "e3dc"
 DEFAULT_PORT = 502
 DEFAULT_UNIT_ID = 1
 DEFAULT_SCAN_INTERVAL = 5  # Sekunden
+DEFAULT_REGISTER_OFFSET = 0
 
 # ------------------------------------------------------------------
 # Modbus Register – E3/DC Simple Mode

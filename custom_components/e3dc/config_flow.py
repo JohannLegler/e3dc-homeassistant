@@ -9,6 +9,7 @@ from .const import (
     DEFAULT_PORT,
     DEFAULT_UNIT_ID,
     DEFAULT_SCAN_INTERVAL,
+    DEFAULT_REGISTER_OFFSET,
 )
 from .modbus import E3DCModbusClient
 
@@ -44,11 +45,13 @@ class E3DCConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                         "host": user_input["host"],
                         "port": user_input["port"],
                         "unit_id": user_input["unit_id"],
+                        "register_offset": user_input["register_offset"],
                     },
                     options={
                         "scan_interval": DEFAULT_SCAN_INTERVAL,
                         "wallboxes": user_input.get("wallboxes", 1),
                         "wallbox_type": "classic",
+                        "register_offset": user_input["register_offset"],
                     },
                 )
 
@@ -57,6 +60,10 @@ class E3DCConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 vol.Required("host"): str,
                 vol.Optional("port", default=DEFAULT_PORT): int,
                 vol.Optional("unit_id", default=DEFAULT_UNIT_ID): int,
+                vol.Optional(
+                    "register_offset",
+                    default=DEFAULT_REGISTER_OFFSET,
+                ): vol.All(int, vol.Range(min=-2, max=2)),
                 vol.Optional("wallboxes", default=1): vol.All(
                     int, vol.Range(min=0, max=8)
                 ),
@@ -74,6 +81,7 @@ class E3DCConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             host=data["host"],
             port=data["port"],
             unit_id=data["unit_id"],
+            register_offset=data["register_offset"],
         )
 
         await client.connect()
@@ -115,6 +123,15 @@ class E3DCOptionsFlow(config_entries.OptionsFlow):
                         "wallbox_type", "classic"
                     ),
                 ): vol.In(WALLBOX_TYPES),
+                vol.Required(
+                    "register_offset",
+                    default=self._entry.options.get(
+                        "register_offset",
+                        self._entry.data.get(
+                            "register_offset", DEFAULT_REGISTER_OFFSET
+                        ),
+                    ),
+                ): vol.All(int, vol.Range(min=-2, max=2)),
             }
         )
 

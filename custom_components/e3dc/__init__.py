@@ -1,4 +1,4 @@
-from .const import DOMAIN, DEFAULT_PORT, DEFAULT_UNIT_ID
+from .const import DOMAIN, DEFAULT_PORT, DEFAULT_UNIT_ID, DEFAULT_REGISTER_OFFSET
 from .modbus import E3DCModbusClient
 from .coordinator import E3DCCoordinator
 
@@ -9,11 +9,16 @@ async def async_setup_entry(hass, entry):
     host = entry.data["host"]
     port = entry.data.get("port", DEFAULT_PORT)
     unit_id = entry.data.get("unit_id", DEFAULT_UNIT_ID)
+    register_offset = entry.options.get(
+        "register_offset",
+        entry.data.get("register_offset", DEFAULT_REGISTER_OFFSET),
+    )
 
     client = E3DCModbusClient(
         host=host,
         port=port,
         unit_id=unit_id,
+        register_offset=register_offset,
     )
 
     coordinator = E3DCCoordinator(
