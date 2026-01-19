@@ -20,11 +20,13 @@ class E3DCModbusClient:
         self._lock = asyncio.Lock()
 
     async def connect(self):
-        if not self._client.protocol:
+        connected = getattr(self._client, "connected", False)
+        if not connected:
             await self._client.connect()
 
     async def close(self):
-        if self._client.protocol:
+        connected = getattr(self._client, "connected", False)
+        if connected:
             await self._client.close()
 
     # --------------------------------------------------
