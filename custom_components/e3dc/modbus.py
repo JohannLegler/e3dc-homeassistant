@@ -1,7 +1,7 @@
 import asyncio
+import struct
+
 from pymodbus.client import AsyncModbusTcpClient
-from pymodbus.payload import BinaryPayloadDecoder
-from pymodbus.constants import Endian
 from pymodbus.exceptions import ModbusException
 
 
@@ -63,12 +63,8 @@ class E3DCModbusClient:
 
     @staticmethod
     def decode_int32(registers):
-        decoder = BinaryPayloadDecoder.fromRegisters(
-            registers,
-            byteorder=Endian.BIG,
-            wordorder=Endian.BIG,
-        )
-        return decoder.decode_32bit_int()
+        raw = struct.pack(">HH", registers[0], registers[1])
+        return struct.unpack(">i", raw)[0]
 
     @staticmethod
     def decode_uint16(registers):
