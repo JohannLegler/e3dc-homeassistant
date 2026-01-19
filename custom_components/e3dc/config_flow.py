@@ -52,6 +52,9 @@ class E3DCConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                         "wallboxes": user_input.get("wallboxes", 1),
                         "wallbox_type": "classic",
                         "register_offset": user_input["register_offset"],
+                        "validate_magicbyte": user_input[
+                            "validate_magicbyte"
+                        ],
                     },
                 )
 
@@ -64,6 +67,7 @@ class E3DCConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     "register_offset",
                     default=DEFAULT_REGISTER_OFFSET,
                 ): vol.All(int, vol.Range(min=-2, max=2)),
+                vol.Optional("validate_magicbyte", default=True): bool,
                 vol.Optional("wallboxes", default=1): vol.All(
                     int, vol.Range(min=0, max=8)
                 ),
@@ -77,6 +81,9 @@ class E3DCConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
     async def _validate_input(self, hass: HomeAssistant, data):
+        if not data.get("validate_magicbyte", True):
+            return
+
         client = E3DCModbusClient(
             host=data["host"],
             port=data["port"],
@@ -87,7 +94,7 @@ class E3DCConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         await client.connect()
         try:
             regs = await client.read_holding_registers(40001, 1)
-            if regs[0] != 0xE3DC:
+            if regs[0] not in (0xE3DC, 0x00DC):
                 raise HomeAssistantError("Not an E3/DC device")
         finally:
             await client.close()
@@ -132,6 +139,12 @@ class E3DCOptionsFlow(config_entries.OptionsFlow):
                         ),
                     ),
                 ): vol.All(int, vol.Range(min=-2, max=2)),
+                vol.Required(
+                    "validate_magicbyte",
+                    default=self._entry.options.get(
+                        "validate_magicbyte", True
+                    ),
+                ): bool,
             }
         )
 
