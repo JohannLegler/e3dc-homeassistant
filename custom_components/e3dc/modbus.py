@@ -36,11 +36,20 @@ class E3DCModbusClient:
     async def read_holding_registers(self, address: int, count: int):
         async with self._lock:
             await self.connect()
-            result = await self._client.read_holding_registers(
-                address=address + self._register_offset - 1,
-                count=count,
-                slave=self._unit_id,
-            )
+            kwargs = {
+                "address": address + self._register_offset - 1,
+                "count": count,
+            }
+            try:
+                result = await self._client.read_holding_registers(
+                    **kwargs,
+                    slave=self._unit_id,
+                )
+            except TypeError:
+                result = await self._client.read_holding_registers(
+                    **kwargs,
+                    unit=self._unit_id,
+                )
 
         if result.isError():
             raise ModbusException(result)
@@ -50,11 +59,20 @@ class E3DCModbusClient:
     async def write_register(self, address: int, value: int):
         async with self._lock:
             await self.connect()
-            result = await self._client.write_register(
-                address=address + self._register_offset - 1,
-                value=value,
-                slave=self._unit_id,
-            )
+            kwargs = {
+                "address": address + self._register_offset - 1,
+                "value": value,
+            }
+            try:
+                result = await self._client.write_register(
+                    **kwargs,
+                    slave=self._unit_id,
+                )
+            except TypeError:
+                result = await self._client.write_register(
+                    **kwargs,
+                    unit=self._unit_id,
+                )
 
         if result.isError():
             raise ModbusException(result)
