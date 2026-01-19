@@ -1,11 +1,19 @@
 from homeassistant.components.sensor import (
+    RestoreSensor,
     SensorEntity,
     SensorDeviceClass,
     SensorStateClass,
 )
-from homeassistant.const import UnitOfPower, UnitOfElectricPotential, UnitOfElectricCurrent, PERCENTAGE
+from homeassistant.const import (
+    UnitOfEnergy,
+    UnitOfPower,
+    UnitOfElectricPotential,
+    UnitOfElectricCurrent,
+    PERCENTAGE,
+)
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.util import dt as dt_util
 
 from .const import (
     DOMAIN,
@@ -28,6 +36,13 @@ BASE_SENSORS = {
     "sg_ready_status": ("SG Ready Status", None, None),
 }
 
+ENERGY_SENSORS = {
+    "grid_import": ("Netzbezug Energie", "grid_power", lambda v: max(v, 0)),
+    "grid_export": ("Netzeinspeisung Energie", "grid_power", lambda v: max(-v, 0)),
+    "battery_charge": ("Batterie Laden Energie", "battery_power", lambda v: max(v, 0)),
+    "battery_discharge": ("Batterie Entladen Energie", "battery_power", lambda v: max(-v, 0)),
+    "solar_production": ("PV Energie", "pv_power", lambda v: max(v, 0)),
+}
 GRID_PHASE_SENSORS = {
     "grid_l1": "Netz L1 Leistung",
     "grid_l2": "Netz L2 Leistung",
@@ -86,6 +101,19 @@ async def async_setup_entry(hass, entry, async_add_entities):
             )
         )
 
+    # Energy dashboard sensors (derived from power)
+    for key, (name, source_key, transform) in ENERGY_SENSORS.items():
+        entities.append(
+            E3DCEnergySensor(
+                coordinator,
+                entry,
+                key,
+                name,
+                source_key,
+                transform,
+            )
+        )
+
     async_add_entities(entities)
 
 
@@ -105,6 +133,68 @@ class E3DCSensor(CoordinatorEntity, SensorEntity):
     @property
     def native_value(self):
         return self.coordinator.data.get(self._key)
+
+    @property
+    def device_info(self):
+        data = self.coordinator.data
+        return DeviceInfo(
+            identifiers={(DOMAIN, self._entry.entry_id)},
+            manufacturer=data.get("manufacturer") or "HagerEnergy / E3/DC",
+            model=data.get("model"),
+            serial_number=data.get("serial_number"),
+            sw_version=data.get("firmware_release"),
+            name="E3/DC Energiespeichersystem",
+        )
+
+
+class E3DCEnergySensor(CoordinatorEntity, RestoreSensor):
+    def __init__(self, coordinator, entry, key, name, source_key, transform):
+        super().__init__(coordinator)
+
+        self._entry = entry
+        self._key = key
+        self._source_key = source_key
+        self._transform = transform
+
+        self._energy = None
+        self._last_update = None
+
+        self._attr_name = f"E3DC {name}"
+        self._attr_unique_id = f"{entry.entry_id}_energy_{key}"
+        self._attr_native_unit_of_measurement = UnitOfEnergy.KILO_WATT_HOUR
+        self._attr_device_class = SensorDeviceClass.ENERGY
+        self._attr_state_class = SensorStateClass.TOTAL_INCREASING
+
+    async def async_added_to_hass(self):
+        await super().async_added_to_hass()
+        state = await self.async_get_last_state()
+        if state and state.state not in (None, "unknown", "unavailable"):
+            try:
+                self._energy = float(state.state)
+            except ValueError:
+                self._energy = None
+        self._last_update = dt_util.utcnow()
+
+    @property
+    def native_value(self):
+        if self._energy is None:
+            return None
+        return round(self._energy, 3)
+
+    def _handle_coordinator_update(self):
+        now = dt_util.utcnow()
+        if self._last_update is not None:
+            dt_seconds = (now - self._last_update).total_seconds()
+            if dt_seconds > 0:
+                power = self.coordinator.data.get(self._source_key)
+                if power is not None:
+                    power = self._transform(power)
+                    if self._energy is None:
+                        self._energy = 0.0
+                    self._energy += (power / 1000.0) * (dt_seconds / 3600.0)
+
+        self._last_update = now
+        self.async_write_ha_state()
 
     @property
     def device_info(self):
