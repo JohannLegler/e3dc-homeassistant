@@ -42,6 +42,8 @@ ENERGY_SENSORS = {
     "battery_charge": ("Batterie Laden Energie", "battery_power", lambda v: max(v, 0)),
     "battery_discharge": ("Batterie Entladen Energie", "battery_power", lambda v: max(-v, 0)),
     "solar_production": ("PV Energie", "pv_power", lambda v: max(v, 0)),
+    "wallbox_energy": ("Wallbox Energie", "wallbox_power", lambda v: max(v, 0)),
+    "wallbox_solar_energy": ("Wallbox Solar Energie", "wallbox_solar_power", lambda v: max(v, 0)),
 }
 GRID_PHASE_SENSORS = {
     "grid_l1": "Netz L1 Leistung",
