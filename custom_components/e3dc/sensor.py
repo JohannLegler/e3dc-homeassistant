@@ -37,13 +37,20 @@ BASE_SENSORS = {
 }
 
 ENERGY_SENSORS = {
-    "grid_import": ("Netzbezug Energie", "grid_power", lambda v: max(v, 0)),
-    "grid_export": ("Netzeinspeisung Energie", "grid_power", lambda v: max(-v, 0)),
-    "battery_charge": ("Batterie Laden Energie", "battery_power", lambda v: max(v, 0)),
-    "battery_discharge": ("Batterie Entladen Energie", "battery_power", lambda v: max(-v, 0)),
-    "solar_production": ("PV Energie", "pv_power", lambda v: max(v, 0)),
-    "wallbox_energy": ("Wallbox Energie", "wallbox_power", lambda v: max(v, 0)),
-    "wallbox_solar_energy": ("Wallbox Solar Energie", "wallbox_solar_power", lambda v: max(v, 0)),
+    "grid_import": ("Netzbezug Energie", "grid_power", lambda v, data: max(v, 0)),
+    "grid_export": ("Netzeinspeisung Energie", "grid_power", lambda v, data: max(-v, 0)),
+    "battery_charge": ("Batterie Laden Energie", "battery_power", lambda v, data: max(v, 0)),
+    "battery_discharge": ("Batterie Entladen Energie", "battery_power", lambda v, data: max(-v, 0)),
+    "solar_production": ("PV Energie", "pv_power", lambda v, data: max(v, 0)),
+    "wallbox_energy": ("Wallbox Energie", "wallbox_power", lambda v, data: max(v, 0)),
+    "wallbox_solar_energy": ("Wallbox Solar Energie", "wallbox_solar_power", lambda v, data: max(v, 0)),
+    "wallbox_grid_energy": (
+        "Wallbox Netz Energie",
+        "wallbox_power",
+        lambda v, data: max(
+            v - (data.get("wallbox_solar_power") or 0), 0
+        ),
+    ),
 }
 GRID_PHASE_SENSORS = {
     "grid_l1": "Netz L1 Leistung",
@@ -190,7 +197,7 @@ class E3DCEnergySensor(CoordinatorEntity, RestoreSensor):
             if dt_seconds > 0:
                 power = self.coordinator.data.get(self._source_key)
                 if power is not None:
-                    power = self._transform(power)
+                    power = self._transform(power, self.coordinator.data)
                     if self._energy is None:
                         self._energy = 0.0
                     self._energy += (power / 1000.0) * (dt_seconds / 3600.0)
