@@ -93,7 +93,8 @@ class E3DCModbusClient:
 
     @staticmethod
     def decode_int32(registers):
-        raw = struct.pack(">HH", registers[0], registers[1])
+        # E3/DC uses little word order for 32-bit values.
+        raw = struct.pack(">HH", registers[1], registers[0])
         return struct.unpack(">i", raw)[0]
 
     @staticmethod
