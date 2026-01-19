@@ -1,7 +1,4 @@
-from homeassistant.components.binary_sensor import (
-    BinarySensorEntity,
-    BinarySensorDeviceClass,
-)
+from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -45,7 +42,7 @@ class E3DCEMSBinarySensor(CoordinatorEntity, BinarySensorEntity):
 
         self._attr_name = f"E3DC {name}"
         self._attr_unique_id = f"{entry.entry_id}_ems_{key}"
-        self._attr_device_class = BinarySensorDeviceClass.PROBLEM
+        self._attr_device_class = None
 
     @property
     def is_on(self):

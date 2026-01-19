@@ -3,7 +3,7 @@ from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorStateClass,
 )
-from homeassistant.const import UnitOfPower, PERCENTAGE
+from homeassistant.const import UnitOfPower, UnitOfElectricPotential, UnitOfElectricCurrent, PERCENTAGE
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -61,14 +61,23 @@ async def async_setup_entry(hass, entry, async_add_entities):
 
     # DC-Strings
     for key in DC_STRINGS.keys():
+        unit = None
+        device_class = None
+        if key.endswith("_voltage"):
+            unit = UnitOfElectricPotential.VOLT
+        elif key.endswith("_current"):
+            unit = UnitOfElectricCurrent.AMPERE
+        elif key.endswith("_power"):
+            unit = UnitOfPower.WATT
+            device_class = SensorDeviceClass.POWER
         entities.append(
             E3DCSensor(
                 coordinator,
                 entry,
                 key,
                 key.replace("_", " ").title(),
-                UnitOfPower.WATT if "power" in key else None,
-                SensorDeviceClass.POWER if "power" in key else None,
+                unit,
+                device_class,
             )
         )
 
