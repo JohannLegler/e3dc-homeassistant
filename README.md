@@ -28,6 +28,13 @@ You will need:
 - Modbus port (default: 502)
 - Optional: register offset (auto-detected via magic byte)
 
+## Available Registers (Simple Mode)
+- System information: manufacturer, model, serial number, firmware release
+- Power values: PV, battery, house, grid, additional feed-in, wallbox power
+- Status: SOC, EMS status bits, autarky, self-consumption
+- DC strings: voltage, current (factor 0.01), power
+- SG-Ready status
+
 ## Addressing and Magic Byte
 - Simple Mode magic byte is `0xE3DC` at register `40001`.
 - Some clients use different base addresses; the integration probes offsets

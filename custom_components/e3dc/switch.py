@@ -129,8 +129,12 @@ class E3DCWallboxSwitch(CoordinatorEntity, SwitchEntity):
 
     @property
     def device_info(self):
+        data = self.coordinator.data
         return DeviceInfo(
             identifiers={(DOMAIN, self._entry.entry_id)},
-            manufacturer="HagerEnergy / E3/DC",
+            manufacturer=data.get("manufacturer") or "HagerEnergy / E3/DC",
+            model=data.get("model"),
+            serial_number=data.get("serial_number"),
+            sw_version=data.get("firmware_release"),
             name="E3/DC Energiespeichersystem",
         )

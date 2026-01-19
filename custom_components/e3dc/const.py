@@ -17,9 +17,12 @@ REGISTERS = {
     "battery_power":   {"addr": 40070, "len": 2, "type": "int32"},
     "house_power":     {"addr": 40072, "len": 2, "type": "int32"},
     "grid_power":      {"addr": 40074, "len": 2, "type": "int32"},
+    "additional_feedin_power": {"addr": 40076, "len": 2, "type": "int32"},
     "wallbox_power":   {"addr": 40078, "len": 2, "type": "int32"},
+    "wallbox_solar_power": {"addr": 40080, "len": 2, "type": "int32"},
 
     # Status
+    "autarky_raw":     {"addr": 40082, "len": 1, "type": "uint16"},
     "battery_soc":     {"addr": 40083, "len": 1, "type": "uint16"},
     "emergency_power": {"addr": 40084, "len": 1, "type": "uint16"},
     "ems_status":      {"addr": 40085, "len": 1, "type": "uint16"},
@@ -69,6 +72,25 @@ POWER_METER_TYPE_1 = {
     "grid_l1": {"addr": 40138, "len": 2, "type": "int32"},
     "grid_l2": {"addr": 40140, "len": 2, "type": "int32"},
     "grid_l3": {"addr": 40142, "len": 2, "type": "int32"},
+}
+
+# ------------------------------------------------------------------
+# System information (Strings, Simple Mode)
+# ------------------------------------------------------------------
+
+SYSTEM_INFO = {
+    "manufacturer": {"addr": 40004, "len": 16, "type": "string"},
+    "model": {"addr": 40020, "len": 16, "type": "string"},
+    "serial_number": {"addr": 40036, "len": 16, "type": "string"},
+    "firmware_release": {"addr": 40052, "len": 16, "type": "string"},
+}
+
+# ------------------------------------------------------------------
+# SG-Ready status (Read-Only)
+# ------------------------------------------------------------------
+
+SG_READY = {
+    "sg_ready_status": {"addr": 40137, "len": 1, "type": "uint16"},
 }
 
 # ------------------------------------------------------------------

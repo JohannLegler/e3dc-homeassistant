@@ -20,7 +20,12 @@ BASE_SENSORS = {
     "battery_power": ("Batterie Leistung", UnitOfPower.WATT, SensorDeviceClass.POWER),
     "house_power": ("Hausverbrauch", UnitOfPower.WATT, SensorDeviceClass.POWER),
     "grid_power": ("Netzleistung", UnitOfPower.WATT, SensorDeviceClass.POWER),
+    "additional_feedin_power": ("Zusatz Einspeiser", UnitOfPower.WATT, SensorDeviceClass.POWER),
     "battery_soc": ("Batterie SOC", PERCENTAGE, SensorDeviceClass.BATTERY),
+    "autarky": ("Autarkie", PERCENTAGE, None),
+    "self_consumption": ("Eigenverbrauch", PERCENTAGE, None),
+    "wallbox_solar_power": ("Wallbox Solarleistung", UnitOfPower.WATT, SensorDeviceClass.POWER),
+    "sg_ready_status": ("SG Ready Status", None, None),
 }
 
 GRID_PHASE_SENSORS = {
@@ -103,8 +108,12 @@ class E3DCSensor(CoordinatorEntity, SensorEntity):
 
     @property
     def device_info(self):
+        data = self.coordinator.data
         return DeviceInfo(
             identifiers={(DOMAIN, self._entry.entry_id)},
-            manufacturer="HagerEnergy / E3/DC",
+            manufacturer=data.get("manufacturer") or "HagerEnergy / E3/DC",
+            model=data.get("model"),
+            serial_number=data.get("serial_number"),
+            sw_version=data.get("firmware_release"),
             name="E3/DC Energiespeichersystem",
         )

@@ -11,6 +11,8 @@ from .const import (
     DC_STRINGS,
     POWER_METER_TYPE_1,
     EMS_BITS,
+    SYSTEM_INFO,
+    SG_READY,
     WALLBOX_BASE_ADDR,
     MAX_WALLBOXES,
     DEFAULT_SCAN_INTERVAL,
@@ -39,7 +41,13 @@ class E3DCCoordinator(DataUpdateCoordinator):
             # --------------------------------------------------
             # Basisregister, DC-Strings, Leistungsmesser
             # --------------------------------------------------
-            for source in (REGISTERS, DC_STRINGS, POWER_METER_TYPE_1):
+            for source in (
+                REGISTERS,
+                DC_STRINGS,
+                POWER_METER_TYPE_1,
+                SYSTEM_INFO,
+                SG_READY,
+            ):
                 for key, reg in source.items():
                     try:
                         value = await self._client.read_value(reg)
@@ -80,6 +88,14 @@ class E3DCCoordinator(DataUpdateCoordinator):
             if ems_raw is not None:
                 for bit, name in EMS_BITS.items():
                     data["ems"][name] = bool(ems_raw & (1 << bit))
+
+            # --------------------------------------------------
+            # Autarky / Self-consumption (2x 8-bit in 40082)
+            # --------------------------------------------------
+            autarky_raw = data.get("autarky_raw")
+            if autarky_raw is not None:
+                data["autarky"] = (autarky_raw >> 8) & 0xFF
+                data["self_consumption"] = autarky_raw & 0xFF
 
             return data
 

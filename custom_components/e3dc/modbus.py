@@ -101,6 +101,18 @@ class E3DCModbusClient:
     def decode_uint16(registers):
         return registers[0]
 
+    @staticmethod
+    def decode_int16(registers):
+        value = registers[0]
+        return value - 0x10000 if value & 0x8000 else value
+
+    @staticmethod
+    def decode_string(registers):
+        raw = bytearray()
+        for reg in registers:
+            raw.extend(struct.pack(">H", reg))
+        return raw.decode("ascii", errors="ignore").strip("\x00 ").strip()
+
     # --------------------------------------------------
     # High-level helper
     # --------------------------------------------------
@@ -118,5 +130,11 @@ class E3DCModbusClient:
 
         if rtype == "uint16":
             return self.decode_uint16(regs)
+
+        if rtype == "int16":
+            return self.decode_int16(regs)
+
+        if rtype == "string":
+            return self.decode_string(regs)
 
         raise ValueError(f"Unsupported register type: {rtype}")
